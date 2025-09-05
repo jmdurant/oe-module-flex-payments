@@ -109,19 +109,19 @@ class GlobalConfig
                 'title' => 'Flex HSA/FSA Payments enable overriding twig files'
                 ,'description' => 'Enable module Twig overrides (e.g., portal Flex button)'
                 ,'type' => GlobalSetting::DATA_TYPE_BOOL
-                ,'default' => ''
+                ,'default' => '1'  // Default enabled for portal integration
             ]
             ,self::CONFIG_ENABLE_MENU => [
                 'title' => 'Flex HSA/FSA Payments add module menu item'
                 ,'description' => 'Adds module menu items (requires log out/in)'
                 ,'type' => GlobalSetting::DATA_TYPE_BOOL
-                ,'default' => ''
+                ,'default' => '1'  // Default enabled for admin access
             ]
             ,self::CONFIG_ENABLE_BODY_FOOTER => [
                 'title' => 'Flex HSA/FSA Payments enable body footer injection'
                 ,'description' => 'Injects Flex JS to place buttons across pages'
                 ,'type' => GlobalSetting::DATA_TYPE_BOOL
-                ,'default' => ''
+                ,'default' => '1'  // Default enabled for UI integration
             ]
             ,self::CONFIG_ENABLE_FHIR_API => [
                 'title' => 'Flex HSA/FSA Payments: Enable example FHIR API'
@@ -134,7 +134,7 @@ class GlobalConfig
                 'title' => 'Enable Flex Gateway (HSA/FSA)'
                 ,'description' => 'Turns on Flex gateway UI and endpoints in this module.'
                 ,'type' => GlobalSetting::DATA_TYPE_BOOL
-                ,'default' => ''
+                ,'default' => '1'  // Default enabled - requires API key to function
             ]
             ,self::FLEX_API_BASE_URL => [
                 'title' => 'Flex API Base URL'
@@ -152,7 +152,7 @@ class GlobalConfig
                 'title' => 'Flex Test Mode'
                 ,'description' => 'If enabled, marks requests as test mode when supported.'
                 ,'type' => GlobalSetting::DATA_TYPE_BOOL
-                ,'default' => ''
+                ,'default' => '1'  // Default to test mode for safety
             ]
             ,self::FLEX_WEBHOOK_SECRET_ENCRYPTED => [
                 'title' => 'Flex Webhook Secret (Encrypted)'
@@ -176,7 +176,7 @@ class GlobalConfig
                 'title' => 'Auto-post Flex refunds to AR'
                 ,'description' => 'When enabled, successful Flex refunds create AR reversal entries automatically (including partial refunds).'
                 ,'type' => GlobalSetting::DATA_TYPE_BOOL
-                ,'default' => ''
+                ,'default' => '1'  // Default enabled for automatic reconciliation
             ]
             ,self::FLEX_MOBILE_HMAC_SECRET_ENCRYPTED => [
                 'title' => 'Mobile HMAC Secret (Encrypted)'
