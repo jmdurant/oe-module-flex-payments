@@ -1,0 +1,34 @@
+# Dependencies
+/vendor/
+node_modules/
+composer.lock
+package-lock.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Credentials - NEVER commit these!
+flex.conf
+*.conf
+.env
+.env.local
+.env.*.local
+
+# Keep example files
+!*.conf.example
+!.env.example
+
+# Build artifacts
+*.log
+*.cache
+/build/
+/dist/
+
+# Testing
+/coverage/
+.phpunit.result.cache

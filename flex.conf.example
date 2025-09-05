@@ -1,0 +1,25 @@
+# Flex Payment Module Configuration
+# Copy this to flex.conf and fill in your credentials
+#
+# Usage:
+#   cp flex.conf.example flex.conf
+#   # Edit flex.conf with your credentials
+#   ./deploy-flex-payments-with-config.sh -c flex.conf
+
+# Required: Your Flex API Key
+FLEX_API_KEY="sk_test_YOUR_API_KEY_HERE"
+
+# Optional but recommended: Webhook signing secret
+FLEX_WEBHOOK_SECRET="whsec_YOUR_WEBHOOK_SECRET_HERE"
+
+# Optional: Mobile app HMAC secret (for Flutter integration)
+FLEX_MOBILE_SECRET="YOUR_MOBILE_SECRET_HERE"
+
+# Test mode: "1" for test, "0" for production
+FLEX_TEST_MODE="1"
+
+# API Base URL (defaults to https://api.withflex.com)
+# FLEX_API_BASE_URL="https://api.withflex.com"
+
+# For staging/sandbox environments:
+# FLEX_API_BASE_URL="https://api-sandbox.withflex.com"
