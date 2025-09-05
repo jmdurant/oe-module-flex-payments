@@ -18,6 +18,7 @@ flex.conf
 .env
 .env.local
 .env.*.local
+webhook-url.txt
 
 # Keep example files
 !*.conf.example

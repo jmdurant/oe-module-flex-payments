@@ -1,13 +1,11 @@
 #!/bin/bash
 
-# Flex Payments Module - Credential Setup Helper (Enhanced)
+# Flex Payments Module - Credential Setup Helper
 #
 # This script helps you obtain and configure Flex payment credentials
-# Auto-detects OpenEMR URL for webhook configuration
 #
 # Usage:
-#   ./setup-flex-credentials-v2.sh
-#   ./setup-flex-credentials-v2.sh -p "project" -e "environment"
+#   ./setup-flex-credentials.sh
 
 # Color codes for output
 RED='\033[0;31m'
@@ -18,28 +16,6 @@ MAGENTA='\033[0;35m'
 GRAY='\033[0;90m'
 NC='\033[0m' # No Color
 BOLD='\033[1m'
-
-# Default parameters
-PROJECT="official"
-ENVIRONMENT="production"
-
-# Parse command line arguments
-while getopts "p:e:" opt; do
-  case $opt in
-    p)
-      PROJECT="$OPTARG"
-      ;;
-    e)
-      ENVIRONMENT="$OPTARG"
-      ;;
-    \?)
-      echo "Invalid option: -$OPTARG" >&2
-      exit 1
-      ;;
-  esac
-done
-
-CONTAINER_NAME="${PROJECT}-${ENVIRONMENT}-openemr-1"
 
 # Function to print colored output
 print_color() {
@@ -59,59 +35,6 @@ generate_secret() {
     fi
 }
 
-# Function to detect OpenEMR URL
-detect_openemr_url() {
-    local detected_url=""
-    
-    # Method 1: Try to get from Docker container globals
-    if command -v docker >/dev/null 2>&1 && docker ps --format '{{.Names}}' | grep -q "$CONTAINER_NAME"; then
-        print_color "$GRAY" "Detecting OpenEMR URL from container..."
-        
-        # Try to extract site_addr_oath from globals table
-        detected_url=$(docker exec "$CONTAINER_NAME" mariadb -uopenemr -popenemr openemr -N -e \
-            "SELECT gl_value FROM globals WHERE gl_name = 'site_addr_oath' LIMIT 1;" 2>/dev/null | tr -d '\r\n' || echo "")
-        
-        if [[ -n "$detected_url" ]]; then
-            # Clean up the URL - remove trailing slashes
-            detected_url="${detected_url%/}"
-            print_color "$GREEN" "✓ Detected OpenEMR URL from database: $detected_url"
-            return 0
-        fi
-    fi
-    
-    # Method 2: Try to detect from local OpenEMR installation
-    if [[ -f "$HOME/openemr/sites/default/sqlconf.php" ]]; then
-        print_color "$GRAY" "Checking local OpenEMR configuration..."
-        # Try to extract from config file (this is a simplified approach)
-        local config_host=$(grep -oP "host\s*=\s*['\"]?\K[^'\";\s]+" "$HOME/openemr/sites/default/sqlconf.php" 2>/dev/null || echo "")
-        if [[ "$config_host" == "localhost" ]] || [[ "$config_host" == "127.0.0.1" ]]; then
-            detected_url="http://localhost"
-            print_color "$YELLOW" "⚠️  Detected localhost installation"
-        fi
-    fi
-    
-    # Method 3: Common defaults
-    if [[ -z "$detected_url" ]]; then
-        # Check if running locally
-        if [[ -f /.dockerenv ]]; then
-            detected_url="http://localhost"
-        else
-            # Prompt for manual entry
-            print_color "$YELLOW" "Could not auto-detect OpenEMR URL"
-            read -p "Enter your OpenEMR URL (e.g., https://clinic.example.com): " detected_url
-        fi
-    fi
-    
-    # Store the detected URL
-    OPENEMR_URL="$detected_url"
-}
-
-# Function to generate webhook URL
-generate_webhook_url() {
-    local base_url="${1%/}"  # Remove trailing slash
-    echo "${base_url}/interface/modules/custom_modules/oe-module-flex-payments/public/flex_webhook.php"
-}
-
 # Clear screen for better presentation
 clear
 
@@ -119,16 +42,6 @@ print_color "$CYAN" "===========================================================
 print_color "$CYAN" "      Flex Payments Module - Credential Setup Helper"
 print_color "$CYAN" "============================================================"
 echo ""
-
-# Detect OpenEMR URL early
-detect_openemr_url
-
-if [[ -n "$OPENEMR_URL" ]]; then
-    WEBHOOK_URL=$(generate_webhook_url "$OPENEMR_URL")
-    print_color "$GREEN" "✓ Your webhook URL will be:"
-    print_color "$CYAN" "  ${BOLD}$WEBHOOK_URL${NC}"
-    echo ""
-fi
 
 print_color "$YELLOW" "This helper will guide you through obtaining and configuring"
 print_color "$YELLOW" "the necessary credentials for Flex HSA/FSA payment processing."
@@ -191,19 +104,10 @@ print_color "$GREEN" "1. In Flex Dashboard, go to: ${BOLD}Settings → Webhooks$
 print_color "$GREEN" "2. Click '${BOLD}Add Endpoint${NC}'"
 print_color "$GREEN" "3. Enter your webhook URL:"
 echo ""
-
-if [[ -n "$WEBHOOK_URL" ]]; then
-    print_color "$CYAN" "   ${BOLD}$WEBHOOK_URL${NC}"
-    echo ""
-    print_color "$GREEN" "   ✓ We've auto-detected your OpenEMR URL"
-    print_color "$GRAY" "   Copy the above URL exactly as shown"
-else
-    print_color "$CYAN" "   ${BOLD}https://your-domain.com/interface/modules/custom_modules/oe-module-flex-payments/public/flex_webhook.php${NC}"
-    echo ""
-    print_color "$YELLOW" "   ⚠️  Replace 'your-domain.com' with your actual OpenEMR domain"
-fi
+print_color "$CYAN" "   ${BOLD}https://your-domain.com/interface/modules/custom_modules/oe-module-flex-payments/public/flex_webhook.php${NC}"
 echo ""
-
+print_color "$GRAY" "   Replace 'your-domain.com' with your actual OpenEMR domain"
+echo ""
 print_color "$GREEN" "4. Select events to listen for:"
 print_color "$YELLOW" "   • payment.succeeded"
 print_color "$YELLOW" "   • payment.failed"  
@@ -233,12 +137,6 @@ echo ""
 print_color "$GREEN" "For Flutter/mobile app integration, you need an HMAC secret."
 print_color "$GREEN" "This protects the mobile API endpoint from unauthorized use."
 echo ""
-
-if [[ -n "$OPENEMR_URL" ]]; then
-    MOBILE_ENDPOINT="${OPENEMR_URL}/interface/modules/custom_modules/oe-module-flex-payments/public/flex_controller.php?mode=create_checkout"
-    print_color "$GRAY" "Mobile endpoint: $MOBILE_ENDPOINT"
-    echo ""
-fi
 
 read -p "Generate a mobile HMAC secret? (y/n): " -n 1 -r
 echo
@@ -281,10 +179,6 @@ print_color "$BOLD$CYAN" "Configuration Summary"
 print_color "$MAGENTA" "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
-if [[ -n "$OPENEMR_URL" ]]; then
-    print_color "$GREEN" "✓ OpenEMR URL: $OPENEMR_URL"
-fi
-
 if [[ -n "$FLEX_API_KEY" ]]; then
     print_color "$GREEN" "✓ API Key: ${GRAY}***${FLEX_API_KEY: -8}${NC}"
 else
@@ -305,13 +199,9 @@ fi
 
 print_color "$GREEN" "✓ Test Mode: $([ "$FLEX_TEST_MODE" = "1" ] && echo "YES" || echo "NO")"
 print_color "$GREEN" "✓ API URL: $FLEX_API_BASE_URL"
-
-if [[ -n "$WEBHOOK_URL" ]]; then
-    print_color "$GREEN" "✓ Webhook URL: $WEBHOOK_URL"
-fi
 echo ""
 
-# Save configuration with OpenEMR URL
+# Save configuration
 CONFIG_FILE="flex.conf"
 print_color "$CYAN" "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
@@ -333,25 +223,12 @@ FLEX_MOBILE_SECRET="$FLEX_MOBILE_SECRET"
 # Configuration
 FLEX_TEST_MODE="$FLEX_TEST_MODE"
 FLEX_API_BASE_URL="$FLEX_API_BASE_URL"
-
-# Auto-detected OpenEMR Settings
-OPENEMR_URL="$OPENEMR_URL"
-WEBHOOK_URL="$WEBHOOK_URL"
-
-# Docker Container (for reference)
-CONTAINER_NAME="$CONTAINER_NAME"
 EOF
     
     chmod 600 "$CONFIG_FILE"
     print_color "$GREEN" "✓ Configuration saved to $CONFIG_FILE"
     print_color "$YELLOW" "  File permissions set to 600 (owner read/write only)"
     echo ""
-    
-    # Create a webhook reference file for easy copy/paste
-    if [[ -n "$WEBHOOK_URL" ]]; then
-        echo "$WEBHOOK_URL" > webhook-url.txt
-        print_color "$GREEN" "✓ Webhook URL saved to webhook-url.txt for easy copy/paste"
-    fi
     
     # Offer to deploy immediately
     if [[ -f "./deploy-flex-payments-with-config.sh" ]]; then
@@ -362,26 +239,18 @@ EOF
         if [[ $REPLY =~ ^[Yy]$ ]]; then
             print_color "$GREEN" "Starting deployment..."
             echo ""
-            ./deploy-flex-payments-with-config.sh -c "$CONFIG_FILE" -p "$PROJECT" -e "$ENVIRONMENT"
+            ./deploy-flex-payments-with-config.sh -c "$CONFIG_FILE"
         else
             print_color "$CYAN" "To deploy later, run:"
-            print_color "$YELLOW" "  ./deploy-flex-payments-with-config.sh -c $CONFIG_FILE -p $PROJECT -e $ENVIRONMENT"
+            print_color "$YELLOW" "  ./deploy-flex-payments-with-config.sh -c $CONFIG_FILE"
         fi
     else
         print_color "$CYAN" "To deploy with these settings, run:"
-        print_color "$YELLOW" "  ./deploy-flex-payments-with-config.sh -c $CONFIG_FILE -p $PROJECT -e $ENVIRONMENT"
+        print_color "$YELLOW" "  ./deploy-flex-payments-with-config.sh -c $CONFIG_FILE"
     fi
 else
     print_color "$YELLOW" "Configuration not saved."
     echo ""
-    
-    # Still save webhook URL for reference
-    if [[ -n "$WEBHOOK_URL" ]]; then
-        echo "$WEBHOOK_URL" > webhook-url.txt
-        print_color "$GREEN" "✓ Webhook URL saved to webhook-url.txt for easy copy/paste"
-        echo ""
-    fi
-    
     print_color "$CYAN" "To use these settings, export as environment variables:"
     echo ""
     [[ -n "$FLEX_API_KEY" ]] && print_color "$GRAY" "export FLEX_API_KEY=\"$FLEX_API_KEY\""
@@ -391,7 +260,7 @@ else
     print_color "$GRAY" "export FLEX_API_BASE_URL=\"$FLEX_API_BASE_URL\""
     echo ""
     print_color "$CYAN" "Then run:"
-    print_color "$YELLOW" "  ./deploy-flex-payments-with-config.sh -p $PROJECT -e $ENVIRONMENT"
+    print_color "$YELLOW" "  ./deploy-flex-payments-with-config.sh"
 fi
 
 echo ""
@@ -399,15 +268,6 @@ print_color "$MAGENTA" "━━━━━━━━━━━━━━━━━━�
 print_color "$GREEN" "✅ Setup Complete!"
 print_color "$MAGENTA" "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-
-if [[ -n "$WEBHOOK_URL" ]]; then
-    print_color "$CYAN" "📋 Quick Reference:"
-    print_color "$GRAY" "  Webhook URL: $WEBHOOK_URL"
-    if [[ -n "$MOBILE_ENDPOINT" ]]; then
-        print_color "$GRAY" "  Mobile API: $MOBILE_ENDPOINT"
-    fi
-    echo ""
-fi
 
 # Additional resources
 print_color "$CYAN" "📚 Additional Resources:"
