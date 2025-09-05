@@ -1,0 +1,43 @@
+{#
+  Module override of portal/partial/_nav_icon.html.twig
+  Adds a Flex shortcut button for the Payments tile (id == 'payments-go'),
+  following the Comlink-style Twig override pattern.
+  To enable, turn on: Administration → Globals → Portal → "Skeleton Module enable overriding twig files".
+#}
+{% set localLink = localLink is null ? true : localLink %}
+{% set cardGroup = cardGroup is null ? "cardgroup" : cardGroup %}
+
+<a id="{{ id|attr }}" class="col-lg-2 col-md-4 col-sm-6 col-6 card bg-light pl-sm-2 pr-sm-2 pl-0 pr-0 pt-2 pb-2 text-center text-decoration-none"
+   {% if localLink %}
+    data-toggle="collapse" data-parent="#{{ cardGroup|attr }}" aria-expanded="false"
+    href="#{{ url|attr_url }}"
+   {% else %}
+       {# Note url for urls that are not localLink must be escaped by the caller of this template to avoid double-escaping #}
+    href="{{ url }}"
+   {% endif %}
+   {# windowTitle is used to update the current webpage's title property whenever a card is toggled to be displayed. #}
+   {% if navText %}
+    data-window-title="{{ navText|attr }}"
+   {% endif %}
+>
+    <h1 class="card-image">
+        <i class="fa fa-2x fa-{{ icon|attr }} text-dark"></i>
+    </h1>
+    <div class="card-body pl-1 pr-1 pl-sm-3 pr-sm-3">
+        <button class="btn btn-success d-block w-100 text-light">
+            {% block navTextBlock %}
+            {{ navText | text }}
+            {% endblock %}
+        </button>
+
+        {# Add a native Flex button for the Payments tile. This shows alongside the core tile action. #}
+        {% if id == 'payments-go' %}
+            <a class="btn btn-outline-primary d-block w-100 mt-2"
+               href="#"
+               onclick="window.open('{{ web_root ~ '/interface/modules/custom_modules/oe-module-custom-skeleton/public/flex_popup.php' }}','flex_popup','width=820,height=740'); return false;">
+                {{ 'Pay with Flex' | xlt }}
+            </a>
+        {% endif %}
+    </div>
+</a>
+

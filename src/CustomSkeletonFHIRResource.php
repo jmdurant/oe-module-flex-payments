@@ -11,7 +11,7 @@
  * @license   https://github.com/openemr/openemr/blob/master/LICENSE GNU General Public License 3
  */
 
-namespace OpenEMR\Modules\CustomModuleSkeleton;
+namespace OpenEMR\Modules\FlexPayments;
 
 use OpenEMR\FHIR\R4\FHIRResource\FHIRDomainResource;
 use OpenEMR\FHIR\R4\FHIRElement\FHIRReference;

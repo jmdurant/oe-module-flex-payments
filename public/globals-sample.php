@@ -13,7 +13,7 @@
 
 // we want to have access to events, the autoloader and our module bootstrap so we include globals here
 require_once "../../../../globals.php";
-use OpenEMR\Modules\CustomModuleSkeleton\Bootstrap;
+use OpenEMR\Modules\FlexPayments\Bootstrap;
 
 // Note we have to grab the event dispatcher from the globals kernel which is instantiated in globals.php
 $bootstrap = new Bootstrap($GLOBALS['kernel']->getEventDispatcher());

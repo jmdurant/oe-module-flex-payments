@@ -1,0 +1,16 @@
+{
+  "name": "flex-mock-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Mock Flex Checkout server for flutter_flex example",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "nanoid": "^4.0.2"
+  }
+}
+

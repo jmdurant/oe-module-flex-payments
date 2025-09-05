@@ -14,7 +14,7 @@
  * @license   https://github.com/openemr/openemr/blob/master/LICENSE GNU General Public License 3
  */
 
-namespace OpenEMR\Modules\CustomModuleSkeleton;
+namespace OpenEMR\Modules\FlexPayments;
 
 /**
  * Note the below use statements are importing classes from the OpenEMR core codebase
@@ -36,13 +36,13 @@ use Twig\Error\LoaderError;
 use Twig\Loader\FilesystemLoader;
 
 // we import our own classes here.. although this use statement is unnecessary it forces the autoloader to be tested.
-use OpenEMR\Modules\CustomModuleSkeleton\CustomSkeletonRestController;
+use OpenEMR\Modules\FlexPayments\CustomSkeletonRestController;
 
 
 class Bootstrap
 {
     const MODULE_INSTALLATION_PATH = "/interface/modules/custom_modules/";
-    const MODULE_NAME = "oe-module-custom-skeleton";
+    const MODULE_NAME = "oe-module-flex-payments";
     /**
      * @var EventDispatcherInterface The object responsible for sending and subscribing to events through the OpenEMR system
      */
@@ -120,7 +120,7 @@ class Bootstrap
         global $GLOBALS;
 
         $service = $event->getGlobalsService();
-        $section = xlt("Skeleton Module");
+        $section = xlt("Flex HSA/FSA Payments");
         $service->createSection($section, 'Portal');
 
         $settings = $this->globalsConfig->getGlobalSettingSectionConfiguration();
@@ -163,6 +163,9 @@ class Bootstrap
         ?>
         <link rel="stylesheet" href="<?php echo $this->getAssetPath();?>css/skeleton-module.css">
         <script src="<?php echo $this->getAssetPath();?>js/skeleton-module.js"></script>
+        <?php if ($this->getGlobalConfig()->getGlobalSetting(GlobalConfig::FLEX_ENABLE)) { ?>
+            <script src="<?php echo $this->getAssetPath();?>js/flex-inject.js"></script>
+        <?php } ?>
         <?php
     }
 
@@ -197,6 +200,8 @@ class Bootstrap
              * @global                       $module @see ModulesApplication::loadCustomModule
              */
             $this->eventDispatcher->addListener(MenuEvent::MENU_UPDATE, [$this, 'addCustomModuleMenuItem']);
+            // Also add an Admin menu entry for settings visibility
+            $this->eventDispatcher->addListener(MenuEvent::MENU_UPDATE, [$this, 'addAdminSettingsMenuItem']);
         }
     }
 
@@ -208,10 +213,10 @@ class Bootstrap
         $menuItem->requirement = 0;
         $menuItem->target = 'mod';
         $menuItem->menu_id = 'mod0';
-        $menuItem->label = xlt("Custom Module Skeleton");
+        $menuItem->label = xlt("Flex HSA/FSA Payments");
         // TODO: pull the install location into a constant into the codebase so if OpenEMR changes this location it
         // doesn't break any modules.
-        $menuItem->url = "/interface/modules/custom_modules/oe-module-custom-skeleton/public/sample-index.php";
+        $menuItem->url = "/interface/modules/custom_modules/oe-module-flex-payments/public/sample-index.php";
         $menuItem->children = [];
 
         /**
@@ -242,6 +247,42 @@ class Bootstrap
          */
         $menuItem->global_req = [];
 
+        // Add an optional child item for Flex Payments popup if enabled
+        if ($this->getGlobalConfig()->getGlobalSetting(GlobalConfig::FLEX_ENABLE)) {
+            $flexItem = new \stdClass();
+            $flexItem->requirement = 0;
+            $flexItem->target = 'mod';
+            $flexItem->menu_id = 'mod0_flex';
+            $flexItem->label = xlt('Flex Payment');
+            $flexItem->url = "/interface/modules/custom_modules/{$this->moduleDirectoryName}/public/flex_popup.php";
+            $flexItem->children = [];
+            $flexItem->acl_req = [];
+            $flexItem->global_req = [];
+            $menuItem->children[] = $flexItem;
+
+            $flexInfo = new \stdClass();
+            $flexInfo->requirement = 0;
+            $flexInfo->target = 'mod';
+            $flexInfo->menu_id = 'mod0_flexinfo';
+            $flexInfo->label = xlt('Flex Session Info');
+            $flexInfo->url = "/interface/modules/custom_modules/{$this->moduleDirectoryName}/public/flex_session_view.php";
+            $flexInfo->children = [];
+            $flexInfo->acl_req = [];
+            $flexInfo->global_req = [];
+            $menuItem->children[] = $flexInfo;
+
+            $flexSettings = new \stdClass();
+            $flexSettings->requirement = 0;
+            $flexSettings->target = 'mod';
+            $flexSettings->menu_id = 'mod0_flexcfg';
+            $flexSettings->label = xlt('Flex Settings');
+            $flexSettings->url = "/interface/modules/custom_modules/{$this->moduleDirectoryName}/public/config.php";
+            $flexSettings->children = [];
+            $flexSettings->acl_req = [];
+            $flexSettings->global_req = [];
+            $menuItem->children[] = $flexSettings;
+        }
+
         foreach ($menu as $item) {
             if ($item->menu_id == 'modimg') {
                 $item->children[] = $menuItem;
@@ -251,6 +292,30 @@ class Bootstrap
 
         $event->setMenu($menu);
 
+        return $event;
+    }
+
+    public function addAdminSettingsMenuItem(MenuEvent $event): MenuEvent
+    {
+        $menu = $event->getMenu();
+
+        $menuItem = new \stdClass();
+        $menuItem->requirement = 0;
+        $menuItem->target = 'adm';
+        $menuItem->menu_id = 'adm0_skeleton_flex';
+        $menuItem->label = xlt('Flex Settings');
+        $menuItem->url = "/interface/modules/custom_modules/{$this->moduleDirectoryName}/public/config.php";
+        $menuItem->children = [];
+        $menuItem->acl_req = ["admin", "super"];
+        $menuItem->global_req = [];
+
+        foreach ($menu as $item) {
+            if ($item->menu_id == 'admimg') {
+                $item->children[] = $menuItem;
+                break;
+            }
+        }
+        $event->setMenu($menu);
         return $event;
     }
 

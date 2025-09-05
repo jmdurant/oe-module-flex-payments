@@ -1,6 +1,6 @@
 {
-  "name": "adunsulag/oe-module-custom-skeleton",
-  "description": "OpenEMR Custom Module Skeleton Starter Project",
+  "name": "openemr/oe-module-flex-payments",
+  "description": "Flex HSA/FSA Payment Integration for OpenEMR",
   "type": "openemr-module",
   "license": "GPL-3.0",
   "authors": [
@@ -13,7 +13,7 @@
   "keywords": ["openemr", "openemr-module"],
   "minimum-stability": "stable",
   "autoload": {
-    "psr-4": {"OpenEMR\\Modules\\CustomModuleSkeleton\\": "src/"}
+    "psr-4": {"OpenEMR\\Modules\\FlexPayments\\": "src/"}
   },
   "require": {
     "openemr/oe-module-installer-plugin": "^0.1.0",

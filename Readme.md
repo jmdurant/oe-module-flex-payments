@@ -1,65 +1,130 @@
-# OpenEMR Custom Module Skeleton Starter Project
-This is a sample module project that developers can clone and use to create their own custom modules inside 
-the OpenEMR codebase.  These modules leverage the oe-module-install-plugin which installs the custom module
-into the OpenEMR custom module installation folder.
+# Flex HSA/FSA Payments Module for OpenEMR
 
-The project has sample code that demostrates adding your module to the menu system, creating global settings,
-and adding a rest api endpoint.
+This OpenEMR module integrates Flex (HSA/FSA) payment processing for healthcare providers, allowing patients to pay using their HSA/FSA cards through a secure hosted checkout experience.
 
-There are a limited number of events currently in the OpenEMR codebase, as we continue to add support for 
-module writers we will add more events to the codebase.  If there is a place in the core codebase you would 
-like your custom module to connect to please file an issue at [https://github.com/openemr/openemr](https://github.com/openemr/openemr)
+## Features
 
-## Getting Started
-You can start by cloning the project.  When developing modules the best initial location would be to clone the directory
-inside the OpenEMR custom modules location.  This is at *<openemr_installation_directory>//interface/modules/custom_modules/*
-```git
-git clone https://github.com/adunsulag/oe-module-custom-skeleton <your-project-name>
+- **Hosted Checkout Integration**: PCI-compliant payment processing through Flex's hosted checkout
+- **HSA/FSA Card Support**: Specialized payment flow for healthcare spending accounts
+- **Multi-interface Support**: Works in staff payment modals and patient portal
+- **Automatic Refund Reconciliation**: Posts refunds directly to accounts receivable
+- **Webhook Support**: Real-time payment status updates with HMAC signature verification
+- **Mobile App Integration**: Flutter plugin for native iOS/Android apps
+- **Test Mode**: Safe testing environment before going live
+
+## Quick Links
+
+- **OpenEMR Module Documentation**: `docs/Flex-OpenEMR-Module.md`
+- **Flutter Plugin Documentation**: `docs/Flutter-Flex-Plugin.md`
+
+## Installation
+
+### Via Composer (Recommended)
+
+```bash
+composer require openemr/oe-module-flex-payments
 ```
 
-Update the composer.json file properties for your own project.
+### Manual Installation
 
-Look at src/Bootstrap.php to see how to add menu items, subscribe to system events, insert global settings, or adjust the OpenEMR api.
+1. Clone this repository into your OpenEMR custom modules directory:
+   ```bash
+   cd <openemr_installation>/interface/modules/custom_modules/
+   git clone https://github.com/your-org/oe-module-flex-payments
+   ```
 
+2. Run composer autoload update:
+   ```bash
+   composer dump-autoload
+   ```
 
-### Installing Module Via Composer
-There are two ways to install your module via composer.  
-#### Public Module
-We highly encourage you to share your created modules with the OpenEMR community.  To ensure that other developers / users can install
-your packages please register your module on [https://packagist.org/](https://packagist.org/).  Once your module has been registered
-users can install your package by doing a `composer require "<namespace>/<your-package-name>`
-#### Private Module
-If your module is a private module you can still tell composer where to find your module by setting it up to use a private repository.
-You can do it with the following command:
+### Activation
+
+1. Login to OpenEMR as an administrator
+2. Navigate to **Modules → Manage Modules**
+3. Click the **Unregistered** tab
+4. Find "Flex Payments" and click **Register**
+5. Click **Install**, then **Enable**
+
+## Configuration
+
+Navigate to **Administration → Globals → Portal → "Flex HSA/FSA Payments"**
+
+### Required Settings
+
+- **Enable Flex Gateway**: Toggle to activate the module
+- **Flex API Base URL**: Your Flex API endpoint (e.g., `https://api.withflex.com`)
+- **Flex API Key**: Your encrypted API key from Flex
+
+### Optional Settings
+
+- **Test Mode**: Enable for testing without processing real payments
+- **Webhook Secret**: For verifying webhook signatures
+- **Auto-post Refunds**: Automatically create AR entries for refunds
+- **Mobile HMAC Secret**: For securing mobile app requests
+
+## Usage
+
+### Staff Payment Processing
+
+1. Navigate to patient account
+2. Click **Record Payment**
+3. Select **Pay with Flex** button
+4. Complete payment in hosted checkout
+5. Payment automatically posts to patient account
+
+### Patient Portal
+
+Patients see a **Pay with Flex** button on their payment tile, providing direct access to HSA/FSA payment options.
+
+### Mobile App Integration
+
+The included Flutter plugin enables native mobile payment flows. See `docs/Flutter-Flex-Plugin.md` for implementation details.
+
+## Security Features
+
+- All API credentials are encrypted at rest
+- HMAC SHA-256 signature verification for webhooks
+- No card data touches your servers (PCI-compliant hosted checkout)
+- Timestamp validation and nonce support for mobile requests
+
+## Module Structure
+
 ```
-composer config repositories.repo-name vcs https://github.com/<organization or user name>/<repository name>
-```
-For example to install this skeleton as a module you can run the following
-```
-composer config repositories.repo-name vcs https://github.com/adunsulag/oe-module-custom-skeleton
+oe-module-flex-payments/
+├── src/                    # PHP source files
+│   ├── Bootstrap.php       # Module initialization
+│   ├── FlexGatewayService.php # Flex API wrapper
+│   ├── GlobalConfig.php    # Configuration management
+│   └── RefundReconciler.php # AR posting logic
+├── public/                 # Web endpoints
+│   ├── flex_controller.php # Main API controller
+│   ├── flex_webhook.php   # Webhook handler
+│   └── assets/js/         # JavaScript assets
+├── flutter_flex/          # Flutter mobile plugin
+├── templates/             # Twig templates
+└── docs/                  # Documentation
 ```
 
-At that point you can run the install command
-```
-composer require adunsulag/oe-module-custom-skeleton
-```
+## Support
 
-### Installing Module via filesystem
-If you copy your module into the installation directory you will need to copy your module's composer.json "psr-4" property into your OpenEMR's psr-4 settings.
-You will also need to run a ```composer dump-autoload``` wherever your openemr composer.json file is located in order to get your namespace properties setup properly
-to include your module.
-
-### Activating Your Module
-Install your module using either composer (recommended) or by placing your module in the *<openemr_installation_directory>//interface/modules/custom_modules/*.
-
-Once your module is installed in OpenEMR custom_modules folder you can activate your module in OpenEMR by doing the following.
-
-  1. Login to your OpenEMR installation as an administrator
-  2. Go to your menu and select Modules -> Manage Modules
-  3. Click on the Unregistered tab in your modules list
-  4. Find your module and click the *Register* button.  This will reload the page and put your module in the Registered list tab of your modules
-  5. Now click the *Install* button next your module name.
-  6. Finally click the *Enable* button for your module.
+For issues or questions:
+- Check the documentation in `/docs`
+- Submit issues on GitHub
+- Contact your Flex integration specialist
 
 ## Contributing
-If you would like to help in improving the skeleton library just post an issue on Github or send a pull request.
+
+Contributions are welcome! Please submit pull requests with:
+- Clear commit messages
+- Updated documentation
+- Test coverage where applicable
+
+## License
+
+GPL-3.0 License - See LICENSE file for details
+
+## Credits
+
+Originally based on the OpenEMR Custom Module Skeleton by Stephen Nielson.
+Extended with Flex payment integration for healthcare providers.

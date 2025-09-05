@@ -1,0 +1,27 @@
+name: flutter_flex
+description: A minimal Flex (HSA/FSA) hosted checkout Flutter plugin. Presents Flex Checkout URLs and returns results.
+version: 0.1.0
+publish_to: 'none'
+
+environment:
+  sdk: '>=2.17.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  meta: ^1.8.0
+  crypto: ^3.0.3
+  uuid: ^3.0.7
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: com.example.flutter_flex
+        pluginClass: FlutterFlexPlugin
+      ios:
+        pluginClass: FlutterFlexPlugin
